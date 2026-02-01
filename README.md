@@ -52,3 +52,5 @@ Group_Assignment_Automation/
 
 - **Dashboard UI**: Verifying module visibility and navigation for Admin and Normal users.
 - **Dashboard API**: Verifying access control for dashboard-related endpoints.
+
+# CHANGED
