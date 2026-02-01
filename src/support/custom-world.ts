@@ -1,23 +1,33 @@
 import { setWorldConstructor, World, IWorldOptions } from '@cucumber/cucumber';
-import { Browser, BrowserContext, Page, chromium } from 'playwright';
+import { Browser, BrowserContext, Page } from 'playwright';
+import * as playwright from 'playwright';
 
 export interface ICustomWorld extends World {
     browser?: Browser;
     context?: BrowserContext;
     page?: Page;
+    parameters: Record<string, any>;
+    isUITest?: boolean;
 }
 
 export class CustomWorld extends World implements ICustomWorld {
     browser?: Browser;
     context?: BrowserContext;
     page?: Page;
+    parameters: Record<string, any> = {};
+    isUITest?: boolean;
 
     constructor(options: IWorldOptions) {
         super(options);
+        // Detect if this is a UI test by checking tags
+        const tags = (options as any).pickle?.tags?.map((t: any) => t.name) || [];
+        this.isUITest = tags.includes('@UI');
     }
 
     async init() {
-        this.browser = await chromium.launch({ headless: false });
+        // For UI tests, launch visible browser; for API tests, launch headless
+        const headless = !this.isUITest;
+        this.browser = await playwright.chromium.launch({ headless });
         this.context = await this.browser.newContext();
         this.page = await this.context.newPage();
     }

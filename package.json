@@ -5,9 +5,13 @@
   "main": "index.js",
   "scripts": {
     "test": "cucumber-js",
+    "test:api": "cucumber-js --tags \"@API\"",
+    "test:ui": "cucumber-js --tags \"@UI\"",
+    "test:api:without-bug": "cucumber-js --tags \"@API and not @KNOWN_BUG\"",
+    "test:ui:without-bug": "cucumber-js --tags \"@UI and not @KNOWN_BUG\"",
     "start-db": "docker-compose -f database/docker-compose.yml up -d",
     "stop-db": "docker-compose -f database/docker-compose.yml down",
-    "start-app": "java -jar app/qa-training-app.jar --spring.config.location=file:app/application.properties",
+    "server": "java -jar app/qa-training-app.jar --spring.config.location=file:app/application.properties",
     "verify": "npm run start-db && npm test"
   },
   "keywords": [],

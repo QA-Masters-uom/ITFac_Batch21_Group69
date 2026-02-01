@@ -9,14 +9,15 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    services:
-      docker:
-        image: docker:latest
-        options: --privileged
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -29,25 +30,38 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install
 
-      - name: Start Docker service
+      - name: Start Application Server
+        run: npm run server &
+        env:
+          SPRING_CONFIG_LOCATION: file:app/application.properties
+
+      - name: Wait for server to be ready
         run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io
-          sudo service docker start
+          timeout 60 bash -c 'until curl -f http://localhost:8081/ui/login 2>/dev/null; do sleep 2; done'
 
-      - name: Start database (Docker Compose)
-        run: npm run start-db
-
-      - name: Wait for database to be ready
-        run: sleep 10
-
-      - name: Run tests
-        run: npm test
+      - name: Run UI Tests
+        id: ui-tests
+        run: npm run test:ui
         continue-on-error: true
 
-      - name: Stop database
-        run: npm run stop-db
+      - name: Run API Tests
+        id: api-tests
+        run: npm run test:api
+        continue-on-error: true
+
+      - name: Run UI Tests (without @KNOWN_BUG)
+        id: ui-tests-clean
+        run: npm run test:ui:without-bug
+        continue-on-error: true
+
+      - name: Run API Tests (without @KNOWN_BUG)
+        id: api-tests-clean
+        run: npm run test:api:without-bug
+        continue-on-error: true
+
+      - name: Stop Application Server
         if: always()
+        run: pkill -f "qa-training-app.jar" || true
 
       - name: Upload test reports
         if: always()
@@ -64,11 +78,28 @@ jobs:
             const fs = require('fs');
             const reportPath = 'reports/cucumber-report.html';
             
-            if (fs.existsSync(reportPath)) {
-              github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                body: '✅ Test reports generated. Check the artifacts for detailed results.'
-              });
-            }
+            const uiTestsStatus = '${{ steps.ui-tests.outcome }}' === 'success' ? '✅' : '❌';
+            const apiTestsStatus = '${{ steps.api-tests.outcome }}' === 'success' ? '✅' : '❌';
+            const uiTestsCleanStatus = '${{ steps.ui-tests-clean.outcome }}' === 'success' ? '✅' : '❌';
+            const apiTestsCleanStatus = '${{ steps.api-tests-clean.outcome }}' === 'success' ? '✅' : '❌';
+            
+            let body = '## 🧪 Test Results\n\n';
+            body += '### All Tests (including @KNOWN_BUG)\n';
+            body += `| Test Type | Status |\n`;
+            body += `|-----------|--------|\n`;
+            body += `| UI Tests | ${uiTestsStatus} |\n`;
+            body += `| API Tests | ${apiTestsStatus} |\n`;
+            body += `\n### Tests without @KNOWN_BUG\n`;
+            body += `| Test Type | Status |\n`;
+            body += `|-----------|--------|\n`;
+            body += `| UI Tests | ${uiTestsCleanStatus} |\n`;
+            body += `| API Tests | ${apiTestsCleanStatus} |\n`;
+            body += `\n📊 [View detailed report in artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
