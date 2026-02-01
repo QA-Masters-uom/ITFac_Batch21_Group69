@@ -132,14 +132,6 @@ When('I request {string}', async function (this: CustomWorld, resource: string) 
         headers: { 'Authorization': `Bearer ${token}` }
     });
 
-    console.log(`Request to ${endpoint}: Status ${response.status()}`);
-    try {
-        const body = await response.json();
-        console.log(`Response body:`, JSON.stringify(body).substring(0, 200));
-    } catch (e) {
-        console.log('Could not parse response body');
-    }
-
     this.parameters['response'] = response;
 });
 
@@ -164,7 +156,6 @@ Then('the response should contain an access denied error', async function (this:
 
 Then('the response should contain category count data', async function (this: CustomWorld) {
     const response = this.parameters['response'];
-    console.log(`Category count response status: ${response.status()}`);
     // Only validate if response was successful
     if (response.status() === 200) {
         try {
@@ -178,7 +169,6 @@ Then('the response should contain category count data', async function (this: Cu
 
 Then('the response should contain plant count data', async function (this: CustomWorld) {
     const response = this.parameters['response'];
-    console.log(`Plant count response status: ${response.status()}`);
     // Only validate if response was successful
     if (response.status() === 200) {
         try {
