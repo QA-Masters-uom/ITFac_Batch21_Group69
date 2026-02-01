@@ -9,6 +9,7 @@
     "test:ui": "cucumber-js --tags \"@UI\"",
     "test:api:without-bug": "cucumber-js --tags \"@API and not @KNOWN_BUG\"",
     "test:ui:without-bug": "cucumber-js --tags \"@UI and not @KNOWN_BUG\"",
+    "test:full-report": "cucumber-js --profile full",
     "start-db": "docker-compose -f database/docker-compose.yml up -d",
     "stop-db": "docker-compose -f database/docker-compose.yml down",
     "server": "java -jar app/qa-training-app.jar --spring.config.location=file:app/application.properties",

@@ -59,6 +59,11 @@ jobs:
         run: npm run test:api:without-bug
         continue-on-error: true
 
+      - name: Generate Full Report (All Tests)
+        if: always()
+        run: npm run test:full-report
+        continue-on-error: true
+
       - name: Stop Application Server
         if: always()
         run: pkill -f "qa-training-app.jar" || true
@@ -68,38 +73,40 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cucumber-reports
-          path: reports/cucumber-report.html
+          path: reports/
 
       - name: Comment test results on PR
         if: always()
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const reportPath = 'reports/cucumber-report.html';
-            
-            const uiTestsStatus = '${{ steps.ui-tests.outcome }}' === 'success' ? '✅' : '❌';
-            const apiTestsStatus = '${{ steps.api-tests.outcome }}' === 'success' ? '✅' : '❌';
-            const uiTestsCleanStatus = '${{ steps.ui-tests-clean.outcome }}' === 'success' ? '✅' : '❌';
-            const apiTestsCleanStatus = '${{ steps.api-tests-clean.outcome }}' === 'success' ? '✅' : '❌';
-            
-            let body = '## 🧪 Test Results\n\n';
-            body += '### All Tests (including @KNOWN_BUG)\n';
-            body += `| Test Type | Status |\n`;
-            body += `|-----------|--------|\n`;
-            body += `| UI Tests | ${uiTestsStatus} |\n`;
-            body += `| API Tests | ${apiTestsStatus} |\n`;
-            body += `\n### Tests without @KNOWN_BUG\n`;
-            body += `| Test Type | Status |\n`;
-            body += `|-----------|--------|\n`;
-            body += `| UI Tests | ${uiTestsCleanStatus} |\n`;
-            body += `| API Tests | ${apiTestsCleanStatus} |\n`;
-            body += `\n📊 [View detailed report in artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
-            
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body
-            });
+        run: |
+          echo "## 🧪 Test Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### All Tests (including @KNOWN_BUG)" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Type | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| UI Tests | ${{ steps.ui-tests.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| API Tests | ${{ steps.api-tests.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Tests without @KNOWN_BUG (Critical Checks)" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Type | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| UI Tests | ${{ steps.ui-tests-clean.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| API Tests | ${{ steps.api-tests-clean.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📊 [View detailed report in artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+
+      - name: Enforce merge requirements
+        if: always()
+        run: |
+          echo "Checking merge requirements..."
+          UI_CLEAN="${{ steps.ui-tests-clean.outcome }}"
+          API_CLEAN="${{ steps.api-tests-clean.outcome }}"
+          
+          if [ "$UI_CLEAN" != "success" ] || [ "$API_CLEAN" != "success" ]; then
+            echo "❌ MERGE BLOCKED: Critical tests failed (tests without @KNOWN_BUG)"
+            exit 1
+          fi
+          
+          echo "✅ MERGE ALLOWED: All critical tests passed (excluding @KNOWN_BUG)"
+          exit 0
+
 
