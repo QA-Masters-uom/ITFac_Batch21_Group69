@@ -1,0 +1,24 @@
+{
+  "name": "group_assignment_automation",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "cucumber-js",
+    "start-db": "docker-compose -f database/docker-compose.yml up -d",
+    "stop-db": "docker-compose -f database/docker-compose.yml down",
+    "start-app": "java -jar app/qa-training-app.jar --spring.config.location=file:app/application.properties",
+    "verify": "npm run start-db && npm test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@cucumber/cucumber": "^10.0.0",
+    "@playwright/test": "^1.40.0",
+    "@types/node": "^20.0.0",
+    "playwright": "^1.40.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  }
+}
