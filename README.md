@@ -1,6 +1,6 @@
-# QA Training App Test Automation
+# ITFac_Batch21_Group69
 
-This project contains the automated test suite for the QA Training App, focusing on Dashboard functionalities (Tester ID: 204188P). It uses **Playwright** for browser interaction and **Cucumber** for BDD scenarios.
+This project contains the automated test suite for the QA Training App, focusing on Dashboard functionalities . It uses **Playwright** for browser interaction and **Cucumber** for BDD scenarios.
 
 ## Project Structure
 
