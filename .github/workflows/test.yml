@@ -33,16 +33,24 @@ jobs:
         run: npm install
 
       - name: Install Playwright browsers
-        run: npx playwright install
+        run: npx playwright install --with-deps
 
       - name: Start Application Server
-        run: npm run server &
+        run: |
+          echo "Starting server..."
+          nohup npm run server > server.log 2>&1 &
         env:
           SPRING_CONFIG_LOCATION: file:app/application.properties
 
       - name: Wait for server to be ready
         run: |
-          timeout 60 bash -c 'until curl -f http://localhost:8081/ui/login 2>/dev/null; do sleep 2; done'
+          echo "Waiting for server..."
+          timeout 60 bash -c '
+            until curl -fs http://localhost:8081/ui/login; do
+              echo "Still waiting..."
+              sleep 3
+            done
+          '
 
       - name: Run UI Tests
         id: ui-tests
@@ -71,7 +79,10 @@ jobs:
 
       - name: Stop Application Server
         if: always()
-        run: pkill -f "qa-training-app.jar" || true
+        run: |
+          echo "Stopping server..."
+          pkill -f "npm run server" || true
+          pkill -f "java" || true
 
       - name: Upload test reports
         if: always()
@@ -81,23 +92,38 @@ jobs:
           path: reports/
 
       - name: Comment test results on PR
-        if: always()
-        run: |
-          echo "## 🧪 Test Results Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### All Tests (including @KNOWN_BUG)" >> $GITHUB_STEP_SUMMARY
-          echo "| Test Type | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| UI Tests | ${{ steps.ui-tests.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| API Tests | ${{ steps.api-tests.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Tests without @KNOWN_BUG (Critical Checks)" >> $GITHUB_STEP_SUMMARY
-          echo "| Test Type | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| UI Tests | ${{ steps.ui-tests-clean.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| API Tests | ${{ steps.api-tests-clean.outcome == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "📊 [View detailed report in artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const uiTestsStatus = '${{ steps.ui-tests.outcome }}' === 'success' ? '✅' : '❌';
+            const apiTestsStatus = '${{ steps.api-tests.outcome }}' === 'success' ? '✅' : '❌';
+            const uiCleanStatus = '${{ steps.ui-tests-clean.outcome }}' === 'success' ? '✅' : '❌';
+            const apiCleanStatus = '${{ steps.api-tests-clean.outcome }}' === 'success' ? '✅' : '❌';
+
+            const comment = `## 🧪 Test Results Summary
+
+### All Tests (including @KNOWN_BUG)
+| Test Type | Status |
+|-----------|--------|
+| UI Tests | ${uiTestsStatus} |
+| API Tests | ${apiTestsStatus} |
+
+### Tests without @KNOWN_BUG (Critical Checks)
+| Test Type | Status |
+|-----------|--------|
+| UI Tests | ${uiCleanStatus} |
+| API Tests | ${apiCleanStatus} |
+
+📊 [View detailed reports in artifacts](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`;
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
 
       - name: Enforce merge requirements
         if: always()
@@ -105,13 +131,10 @@ jobs:
           echo "Checking merge requirements..."
           UI_CLEAN="${{ steps.ui-tests-clean.outcome }}"
           API_CLEAN="${{ steps.api-tests-clean.outcome }}"
-          
+
           if [ "$UI_CLEAN" != "success" ] || [ "$API_CLEAN" != "success" ]; then
-            echo "❌ MERGE BLOCKED: Critical tests failed (tests without @KNOWN_BUG)"
+            echo "❌ MERGE BLOCKED: Critical tests failed"
             exit 1
           fi
-          
-          echo "✅ MERGE ALLOWED: All critical tests passed (excluding @KNOWN_BUG)"
-          exit 0
 
-
+          echo "✅ MERGE ALLOWED"
