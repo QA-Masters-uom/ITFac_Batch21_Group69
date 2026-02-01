@@ -91,6 +91,18 @@ jobs:
           name: cucumber-reports
           path: reports/
 
+      - name: Publish Test Summary
+        if: always()
+        run: |
+          echo "## 🧪 Test Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Suite | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| UI Tests | ${{ steps.ui-tests.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| API Tests | ${{ steps.api-tests.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| UI (No Known Bugs) | ${{ steps.ui-tests-clean.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| API (No Known Bugs) | ${{ steps.api-tests-clean.outcome }} |" >> $GITHUB_STEP_SUMMARY
+
       - name: Enforce merge requirements
         if: always()
         run: |
