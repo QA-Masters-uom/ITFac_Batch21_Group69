@@ -35,3 +35,15 @@ Given('I have a valid {string} token', async function (this: CustomWorld, role: 
     const body = await response.json();
     this.parameters['token'] = body.token; // Store token in world parameters
 });
+
+Given("I log out", async function (this: CustomWorld) {
+  // Clear auth/session
+  await this.page!.context().clearCookies();
+  await this.page!.evaluate(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+
+  // Go to login page and ensure we're logged out
+  await this.page!.goto("http://localhost:8081/ui/login");
+});
