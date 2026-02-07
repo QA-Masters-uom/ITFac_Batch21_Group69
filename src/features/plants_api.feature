@@ -3,18 +3,22 @@ Feature: Plant Management (API)
   @Tester_204081G @API
   Scenario: Verify Admin can add a plant via API
     Given I have a valid "admin" token
+    And a sub category exists via API named "P_ORCHID"
+    And no plant exists via API named "P_ALOE"
     When I create a plant via API with:
-      | name      | category | price | quantity       |
-      | API Aloe  | Orchid   | 2000  | 10    |
+      | name   | category | price | quantity |
+      | P_ALOE | P_ORCHID |  2000 |       10 |
     Then the response status should be 201
 
   @Tester_204081G @API
   Scenario: Verify Admin can update a plant via API
     Given I have a valid "admin" token
-    And a plant exists via API named "API Edit"
-    When I update plant "API Edit" via API with:
-      | name        | category | price | quantity    |
-      | API Edited  | Orchid  | 2500  | 10 |
+    And a plant exists via API named "P_PLANT"
+    And no plant exists via API named "P_PLANT_E"
+    And a sub category exists via API named "P_ORCHID"
+    When I update plant "P_PLANT" via API with:
+      | name      | category | price | quantity |
+      | P_PLANT_E | P_ORCHID |  2500 |       10 |
     Then the response status should be 200
 
   @Tester_204081G @API
@@ -30,7 +34,7 @@ Feature: Plant Management (API)
     And a plant exists via API named "API Duplicate"
     When I create a plant via API with:
       | name          | category | price | quantity |
-      | API Duplicate | Indoor   | 2000  | 10 |
+      | API Duplicate | Indoor   |  2000 |       10 |
     Then the response status should be 400
 
   @Tester_204081G @API
@@ -48,18 +52,20 @@ Feature: Plant Management (API)
   @Tester_204081G @API
   Scenario: Verify User cannot create a plant via API
     Given I have a valid "normal" token
+    And a sub category exists via API named "P_ORCHID"
     When I create a plant via API with:
-      | name      | category | price | quantity |
-      | User Add  | Indoor   | 1000  | 10 |
+      | name     | category | price | quantity |
+      | User Add | P_ORCHID |  1000 |       10 |
     Then the response status should be 403
 
   @Tester_204081G @API
   Scenario: Verify User cannot update a plant via API
     Given I have a valid "normal" token
+    And a sub category exists via API named "P_ORCHID"
     And a plant exists via API named "User Update Target"
     When I update plant "User Update Target" via API with:
-      | name      | category | price | quantity |
-      | Hacked    | Indoor   | 1     | 10 |
+      | name   | category | price | quantity |
+      | Hacked | P_ORCHID |     1 |       10 |
     Then the response status should be 403
 
   @Tester_204081G @API

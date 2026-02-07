@@ -3,3 +3,4 @@ automation/playwright-report/
 automation/test-results/
 /node_modules
 helpers
+/reports

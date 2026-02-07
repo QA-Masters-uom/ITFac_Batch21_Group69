@@ -27,26 +27,34 @@ Group_Assignment_Automation/
 ## Setup & Execution
 
 1.  **Install Dependencies**:
+
     ```bash
     npm install
     ```
 
 2.  **Start Database**:
-    ```bash
-    npm run start-db
-    ```
-    *Note: Ensure Docker Desktop is running.*
 
-3.  **Start Application**:
     ```bash
-    npm run start-app
+    npm run server
     ```
-    *Note: The app runs on port 8081.*
 
-4.  **Run Tests**:
+3.  **Run Tests**:
+
     ```bash
     npm test
     ```
+
+4.  **Open Frontend Application**:
+
+    Access the QA Training App at: `http://localhost:8081/ui/login`
+
+5.  **Open Swagger UI**:
+
+    Access the API documentation at: `http://localhost:8081/swagger-ui.html`
+
+6.  **Open Test Reports**:
+
+    After test execution, open the HTML report located at `./reports/html/index.html` for detailed results.
 
 ## Scope (Tester 204188P)
 

@@ -6,12 +6,10 @@ const BASE_URL = process.env.API_BASE_URL ?? "http://localhost:8081";
 
 // ============ TYPES ============
 
-interface CategoryData {
+interface CategoryAPIData {
   id: number;
   name: string;
-  parentId: number | null;
-  createdAt: string;
-  updatedAt: string;
+  parentName: string;
 }
 
 // ============ HELPER FUNCTIONS ============
@@ -46,7 +44,7 @@ async function findCategoryByName(
   world: CustomWorld,
   categoryName: string,
   tokenKey: string,
-) {
+): Promise<CategoryAPIData | null> {
   const res = await world.page!.request.get(`${BASE_URL}/api/categories`, {
     headers: authHeaders(world, tokenKey),
   });
@@ -65,12 +63,11 @@ async function createCategory(
   world: CustomWorld,
   categoryName: string,
   tokenKey: string,
+  parentId?: number,
 ) {
   const res = await world.page!.request.post(`${BASE_URL}/api/categories`, {
     headers: authHeaders(world, tokenKey),
-    data: {
-      name: categoryName,
-    },
+    data: parentId ? { name: categoryName, parentId } : { name: categoryName },
   });
 
   world.parameters["response"] = res;
@@ -109,6 +106,32 @@ async function deleteCategory(
 
   world.parameters["response"] = res;
   return res;
+}
+
+async function getOrCreateMainCategory(
+  world: CustomWorld,
+  tokenKey: string,
+): Promise<CategoryAPIData> {
+  const res = await world.page!.request.get(`${BASE_URL}/api/categories`, {
+    headers: authHeaders(world, tokenKey),
+  });
+
+  expect(res.status()).toBe(200);
+  const categories = await res.json();
+  const list = Array.isArray(categories) ? categories : (categories.data ?? []);
+
+  const found = list.find(
+    (c: any) => String(c.name).toLowerCase() === "main" && c.parentName === "-",
+  );
+
+  if (found) {
+    return found;
+  }
+
+  const createRes = await createCategory(world, "Main", tokenKey);
+  expect(createRes.ok()).toBeTruthy();
+  const createdCategory = await createRes.json();
+  return createdCategory;
 }
 
 async function getAllCategories(world: CustomWorld, tokenKey: string) {
@@ -155,6 +178,61 @@ Given(
     }
 
     this.parameters[`category_${categoryName}`] = category;
+  },
+);
+
+Given(
+  "a sub category exists via API named {string}",
+  async function (this: CustomWorld, categoryName: string) {
+    await ensureAdminToken(this);
+
+    const subCategory = await findCategoryByName(
+      this,
+      categoryName,
+      "adminToken",
+    );
+
+    if (subCategory) {
+      const isSubCategory =
+        subCategory.parentName && subCategory.parentName !== "-";
+      if (isSubCategory) {
+        // Case 1: It IS already a sub-category - keep it
+        this.parameters[`category_${categoryName}`] = subCategory;
+        return;
+      } else {
+        // Case 2: It IS a main category - delete it and create a sub-category instead
+        await deleteCategory(this, subCategory.id, "adminToken");
+
+        const mainCategory = await getOrCreateMainCategory(this, "adminToken");
+
+        const res = await createCategory(
+          this,
+          categoryName,
+          "adminToken",
+          mainCategory.id,
+        );
+
+        expect(res.ok()).toBeTruthy();
+        const createdSubCategory = await res.json();
+        this.parameters[`category_${categoryName}`] = createdSubCategory;
+        return;
+      }
+    } else {
+      // Case 3: Category doesn't exist - create it as a sub-category
+      const mainCategory = await getOrCreateMainCategory(this, "adminToken");
+
+      const res = await createCategory(
+        this,
+        categoryName,
+        "adminToken",
+        mainCategory.id,
+      );
+
+      expect(res.ok()).toBeTruthy();
+      const createdSubCategory = await res.json();
+      this.parameters[`category_${categoryName}`] = createdSubCategory;
+      return;
+    }
   },
 );
 

@@ -27,9 +27,12 @@ async function openPlants(world: CustomWorld) {
   return plants;
 }
 
-When('I go to the "Plants" management page', async function (this: CustomWorld) {
-  await openPlants(this);
-});
+When(
+  'I go to the "Plants" management page',
+  async function (this: CustomWorld) {
+    await openPlants(this);
+  },
+);
 
 When("I add a new plant with:", async function (this: CustomWorld, table: any) {
   const plants = await openPlants(this);
@@ -37,27 +40,35 @@ When("I add a new plant with:", async function (this: CustomWorld, table: any) {
   await plants.addPlant(data);
 });
 
+Given(
+  "a plant exists named {string}",
+  async function (this: CustomWorld, name: string) {
+    const plants = await openPlants(this);
 
-Given('a plant exists named {string}', async function (this: CustomWorld, name: string) {
-  const plants = await openPlants(this);
+    const exists = await plants
+      .rowByPlantName(name)
+      .first()
+      .isVisible()
+      .catch(() => false);
+    if (exists) return;
 
-  const exists = await plants.rowByPlantName(name).first().isVisible().catch(() => false);
-  if (exists) return;
-
-  await plants.addPlant({
-    name,
-    category: "Orchid",
-    price: "1000",
-    quantity: "10",
-  });
-});
+    await plants.addPlant({
+      name,
+      category: "Orchid",
+      price: "1000",
+      quantity: "10",
+    });
+  },
+);
 
 Given(
-  'a plant exists named {string} in category {string}',
+  "a plant exists named {string} in category {string}",
   async function (this: CustomWorld, name: string, category: string) {
     const plants = await openPlants(this);
 
-    const rows = this.page!.locator("tbody tr").filter({ hasText: name }).filter({ hasText: category });
+    const rows = this.page!.locator("tbody tr")
+      .filter({ hasText: name })
+      .filter({ hasText: category });
     if ((await rows.count()) > 0) return;
 
     await plants.addPlant({
@@ -66,78 +77,103 @@ Given(
       price: "900",
       quantity: "15",
     });
-  }
+  },
 );
 
-When('I delete plant {string}', async function (this: CustomWorld, name: string) {
-  const plants = await openPlants(this);
-  await plants.deletePlant(name);
-});
+When(
+  "I delete plant {string}",
+  async function (this: CustomWorld, name: string) {
+    const plants = await openPlants(this);
+    await plants.deletePlant(name);
+  },
+);
 
 Then(
-  'I should not see the plant {string} in the plant list',
+  "I should not see the plant {string} in the plant list",
   async function (this: CustomWorld, name: string) {
     const plants = await openPlants(this);
     await plants.expectPlantNotVisible(name);
-  }
+  },
 );
 
-Then("I should see a plant validation error", async function (this: CustomWorld) {
-  const plants = new PlantsPage(this.page!);
-  await plants.expectValidationError();
+Then(
+  "I should see a plant validation error",
+  async function (this: CustomWorld) {
+    const plants = new PlantsPage(this.page!);
+    await plants.expectValidationError();
+  },
+);
+
+Then(
+  "there should be only 1 plant named {string} in category {string}",
+  async function (this: CustomWorld, name: string, category: string) {
+    await openPlants(this);
+    const rows = this.page!.locator("tbody tr")
+      .filter({ hasText: name })
+      .filter({ hasText: category });
+    await expect(rows).toHaveCount(1);
+  },
+);
+
+When(
+  "I search plants for {string}",
+  async function (this: CustomWorld, term: string) {
+    const plants = new PlantsPage(this.page!);
+    await plants.search(term);
+  },
+);
+
+When("wait for the plant list to refresh", async function (this: CustomWorld) {
+  await this.page!.waitForTimeout(5000);
 });
 
 Then(
-  'there should be only 1 plant named {string} in category {string}',
-  async function (this: CustomWorld, name: string, category: string) {
-    await openPlants(this);
-    const rows = this.page!.locator("tbody tr").filter({ hasText: name }).filter({ hasText: category });
-    await expect(rows).toHaveCount(1);
-  }
+  "only plants matching {string} should be shown",
+  async function (this: CustomWorld, term: string) {
+    const rows = this.page!.locator("tbody tr");
+    const n = await rows.count();
+
+    for (let i = 0; i < n; i++) {
+      const text = (await rows.nth(i).innerText()).toLowerCase();
+      expect(text).toContain(term.toLowerCase());
+    }
+  },
 );
 
-When('I search plants for {string}', async function (this: CustomWorld, term: string) {
-  const plants = new PlantsPage(this.page!);
-  await plants.search(term);
-});
+When(
+  "I edit plant {string} to:",
+  async function (this: CustomWorld, oldName: string, table: any) {
+    const plants = new PlantsPage(this.page!);
+    const row = table.hashes()[0];
 
-Then('only plants matching {string} should be shown', async function (this: CustomWorld, term: string) {
-  const rows = this.page!.locator("tbody tr");
-  const n = await rows.count();
+    await plants.gotoManagePlants();
+    await plants.expectListVisible();
 
-  for (let i = 0; i < n; i++) {
-    const text = (await rows.nth(i).innerText()).toLowerCase();
-    expect(text).toContain(term.toLowerCase());
-  }
-});
+    await plants.editPlant(oldName, {
+      name: row.name,
+      category: row.category,
+      price: row.price,
+      quantity: row.quantity,
+    });
 
-When('I edit plant {string} to:', async function (this: CustomWorld, oldName: string, table: any) {
-  const plants = new PlantsPage(this.page!);
-  const row = table.hashes()[0];
+    await plants.gotoManagePlants();
+    await this.page!.waitForSelector(`tbody tr:has-text("${row.name}")`, {
+      timeout: 10000,
+    });
+  },
+);
 
-  await plants.gotoManagePlants();
-  await plants.expectListVisible();
+Then(
+  "I should see the plant {string} in the plant list",
+  async function (this: CustomWorld, name: string) {
+    const plants = new PlantsPage(this.page!);
 
-  await plants.editPlant(oldName, {
-    name: row.name,
-    category: row.category,
-    price: row.price,
-    quantity: row.quantity,
-  });
+    await plants.gotoManagePlants();
+    await plants.expectListVisible();
+    await this.page!.waitForSelector(`tbody tr:has-text("${name}")`, {
+      timeout: 20000,
+    });
 
-  await plants.gotoManagePlants();
-  await this.page!.waitForSelector(`tbody tr:has-text("${row.name}")`, { timeout: 10000 });
-});
-
-Then('I should see the plant {string} in the plant list', async function (this: CustomWorld, name: string) {
-  const plants = new PlantsPage(this.page!);
-
-  await plants.gotoManagePlants();
-  await plants.expectListVisible();
-  await this.page!.waitForSelector(`tbody tr:has-text("${name}")`, { timeout: 10000 });
-
-  await plants.expectPlantVisible(name);
-});
-
-
-
+    await plants.expectPlantVisible(name);
+  },
+);

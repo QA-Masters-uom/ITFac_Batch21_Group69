@@ -23,12 +23,6 @@ When(
   },
 );
 
-When('I click the "Sell Plant" button', async function (this: CustomWorld) {
-  const sales = new SalesPage(this.page!);
-  await sales.clickSellPlant();
-  await new Promise((r) => setTimeout(r, 500)); // Wait for navigation
-});
-
 When(
   "I select plant {string} from dropdown",
   async function (this: CustomWorld, plantName: string) {

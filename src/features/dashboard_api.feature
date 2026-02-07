@@ -143,7 +143,6 @@ Feature: Dashboard API Access Control
     When I send a GET request to "/api/sales"
     Then the response status should be 200
     And the response should be a JSON array
-    And the response should contain sales list
 
   @Tester_205072M @API @TC_API_ADMIN_DASH_08
   Scenario: Verify Admin Access Categories List

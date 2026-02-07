@@ -15,8 +15,10 @@
     "server": "java -jar app/qa-training-app.jar --spring.config.location=file:app/application.properties",
     "test:ui:205008b": "cucumber-js --tags \"@UI and @Tester_205008B\"",
     "test:api:205008b": "cucumber-js --tags \"@API and @Tester_205008B\"",
-    "test:ui:205097T": "cucumber-js --tags \"@UI and @Tester_205097T and @TC_UI_USER_CAT_05\"",
-    "test:api:205097T": "cucumber-js --tags \"@API and @Tester_205097T\""
+    "test:ui:205097T": "cucumber-js --tags \"@UI and @Tester_205097T\"",
+    "test:api:205097T": "cucumber-js --tags \"@API and @Tester_205097T\"",
+    "test:ui:204081G": "cucumber-js --tags \"@UI and @Tester_204081G\"",
+    "test:api:204081G": "cucumber-js --tags \"@API and @Tester_204081G\""
   },
   "keywords": [],
   "author": "",
