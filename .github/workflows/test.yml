@@ -1,0 +1,118 @@
+name: Run Tests on Pull Request
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Start Application Server
+        run: |
+          echo "Starting server..."
+          nohup npm run server > server.log 2>&1 &
+        env:
+          SPRING_CONFIG_LOCATION: file:app/application.properties
+
+      - name: Wait for server to be ready
+        run: |
+          echo "Waiting for server..."
+          timeout 60 bash -c '
+            until curl -fs http://localhost:8081/ui/login; do
+              echo "Still waiting..."
+              sleep 3
+            done
+          '
+
+      - name: Run UI Tests
+        id: ui-tests
+        run: npm run test:ui
+        continue-on-error: true
+
+      - name: Run API Tests
+        id: api-tests
+        run: npm run test:api
+        continue-on-error: true
+
+      - name: Run UI Tests (without @KNOWN_BUG)
+        id: ui-tests-clean
+        run: npm run test:ui:without-bug
+        continue-on-error: true
+
+      - name: Run API Tests (without @KNOWN_BUG)
+        id: api-tests-clean
+        run: npm run test:api:without-bug
+        continue-on-error: true
+
+      - name: Generate Full Report (All Tests)
+        if: always()
+        run: npm run test:full-report
+        continue-on-error: true
+
+      - name: Stop Application Server
+        if: always()
+        run: |
+          echo "Stopping server..."
+          pkill -f "npm run server" || true
+          pkill -f "java" || true
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cucumber-reports
+          path: reports/
+
+      - name: Publish Test Summary
+        if: always()
+        run: |
+          echo "## 🧪 Test Results Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Suite | Result |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| UI Tests | ${{ steps.ui-tests.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| API Tests | ${{ steps.api-tests.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| UI (No Known Bugs) | ${{ steps.ui-tests-clean.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| API (No Known Bugs) | ${{ steps.api-tests-clean.outcome }} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Enforce merge requirements
+        if: always()
+        run: |
+          echo "Checking merge requirements..."
+          UI_CLEAN="${{ steps.ui-tests-clean.outcome }}"
+          API_CLEAN="${{ steps.api-tests-clean.outcome }}"
+
+          if [ "$UI_CLEAN" != "success" ] || [ "$API_CLEAN" != "success" ]; then
+            echo "❌ MERGE BLOCKED: Critical tests failed"
+            exit 1
+          fi
+
+          echo "✅ MERGE ALLOWED"

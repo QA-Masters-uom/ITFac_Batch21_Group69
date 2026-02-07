@@ -1,1 +1,3 @@
-/node_modules
+automation/node_modules/
+automation/playwright-report/
+automation/test-results/
