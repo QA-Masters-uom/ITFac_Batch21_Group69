@@ -98,15 +98,6 @@ When("I can navigate to the previous page", async function (this: CustomWorld) {
 // ============ THEN STEPS ============
 
 Then(
-  "I should be redirected to error page {string}",
-  async function (this: CustomWorld, expectedPath: string) {
-    await new Promise((r) => setTimeout(r, 2000)); // Wait for redirect
-    const currentUrl = this.page!.url();
-    expect(currentUrl).toContain(expectedPath);
-  },
-);
-
-Then(
   "the {string} page should be visible",
   async function (this: CustomWorld, pageName: string) {
     const sales = new SalesPage(this.page!);
