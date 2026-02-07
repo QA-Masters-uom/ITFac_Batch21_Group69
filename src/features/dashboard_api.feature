@@ -22,7 +22,7 @@ Feature: Dashboard API Access Control
 
     Examples:
       | status_code |
-      | 401         |
+      |         401 |
 
   @Tester_204188P @API @TC_API_USER_DASH_03
   Scenario: Verify Load Category Stats
@@ -46,7 +46,7 @@ Feature: Dashboard API Access Control
 
     Examples:
       | expected_status |
-      | 403             |
+      |             403 |
 
   @Tester_204188P @API @TC_API_ADMIN_DASH_04
   Scenario: Verify Admin API Access
@@ -77,7 +77,7 @@ Feature: Dashboard API Access Control
 
     Examples:
       | expected_status |
-      | 200             |
+      |             200 |
 
   @Tester_204188P @API
   Scenario Outline: Verify Public Dashboard Data
@@ -86,8 +86,82 @@ Feature: Dashboard API Access Control
     Then the response status should be 200
 
     Examples:
-      | role   | resource          |
-      | admin  | Categories Summary|
-      | normal | Categories Summary|
-      | admin  | Plants Summary    |
-      | normal | Plants Summary    |
+      | role   | resource           |
+      | admin  | Categories Summary |
+      | normal | Categories Summary |
+      | admin  | Plants Summary     |
+      | normal | Plants Summary     |
+
+  @Tester_205072M @API @TC_API_USER_DASH_06
+  Scenario: Verify Access Plants List API
+    Given I have a valid "normal" token
+    When I send a GET request to "/api/plants"
+    Then the response status should be 200
+    And the response should be a JSON array
+    And the response should contain plants list
+
+  @Tester_205072M @API @TC_API_USER_DASH_07
+  Scenario: Verify Access Categories List API
+    Given I have a valid "normal" token
+    When I send a GET request to "/api/categories"
+    Then the response status should be 200
+    And the response should be a JSON array
+    And the response should contain categories list
+
+  @Tester_205072M @API @TC_API_USER_DASH_08 @KNOWN_BUG
+  Scenario: Verify Access Inventory API
+    Given I have a valid "normal" token
+    When I send a GET request to "/api/inventory"
+    Then the response status should be 200
+    And the response should be a JSON array
+    And the response should contain inventory data
+
+  @Tester_205072M @API @TC_API_USER_DASH_09 @KNOWN_BUG
+  Scenario: Verify API Health
+    When I send a GET request to "/api/health" without authentication
+    Then the response status should be 200
+    And the response should contain health status
+
+  @Tester_205072M @API @TC_API_USER_DASH_10 @KNOWN_BUG
+  Scenario: Verify Logout API
+    Given I have a valid "normal" token
+    When I send a POST request to "/api/auth/logout" with the token
+    Then the response status should be 200
+    And the token should be invalidated
+
+  @Tester_205072M @API @TC_API_ADMIN_DASH_06
+  Scenario: Verify Admin Access Plants List
+    Given I have a valid "admin" token
+    When I send a GET request to "/api/plants"
+    Then the response status should be 200
+    And the response should be a JSON array
+    And the response should contain plants list
+
+  @Tester_205072M @API @TC_API_ADMIN_DASH_07
+  Scenario: Verify Admin Access Sales List
+    Given I have a valid "admin" token
+    When I send a GET request to "/api/sales"
+    Then the response status should be 200
+    And the response should be a JSON array
+    And the response should contain sales list
+
+  @Tester_205072M @API @TC_API_ADMIN_DASH_08
+  Scenario: Verify Admin Access Categories List
+    Given I have a valid "admin" token
+    When I send a GET request to "/api/categories"
+    Then the response status should be 200
+    And the response should be a JSON array
+    And the response should contain categories list
+
+  @Tester_205072M @API @TC_API_ADMIN_DASH_09 @KNOWN_BUG
+  Scenario: Verify API Health Check
+    When I send a GET request to "/api/health" without authentication
+    Then the response status should be 200
+    And the response should contain health status
+
+  @Tester_205072M @API @TC_API_ADMIN_DASH_10 @KNOWN_BUG
+  Scenario: Verify Admin Logout API
+    Given I have a valid "admin" token
+    When I send a POST request to "/api/auth/logout" with the token
+    Then the response status should be 200
+    And the token should be invalidated
