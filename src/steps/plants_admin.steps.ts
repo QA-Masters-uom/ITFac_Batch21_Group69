@@ -40,12 +40,10 @@ When("I add a new plant with:", async function (this: CustomWorld, table: any) {
 
 Given('a plant exists named {string}', async function (this: CustomWorld, name: string) {
   const plants = await openPlants(this);
-  console.log("plant name is ", name);
 
   const exists = await plants.rowByPlantName(name).first().isVisible().catch(() => false);
   if (exists) return;
 
-  // create a default one
   await plants.addPlant({
     name,
     category: "Orchid",
@@ -59,7 +57,6 @@ Given(
   async function (this: CustomWorld, name: string, category: string) {
     const plants = await openPlants(this);
 
-    // Check if any row contains both the name and the category text
     const rows = this.page!.locator("tbody tr").filter({ hasText: name }).filter({ hasText: category });
     if ((await rows.count()) > 0) return;
 
@@ -128,7 +125,6 @@ When('I edit plant {string} to:', async function (this: CustomWorld, oldName: st
     quantity: row.quantity,
   });
 
-  // wait until updated name appears
   await plants.gotoManagePlants();
   await this.page!.waitForSelector(`tbody tr:has-text("${row.name}")`, { timeout: 10000 });
 });

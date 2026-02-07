@@ -6,7 +6,7 @@ import { request } from "@playwright/test";
 
 async function openPlants(world: CustomWorld) {
   const plants = new PlantsPage(world.page!);
-  await plants.gotoManagePlants();      // same URL: /ui/plants
+  await plants.gotoManagePlants();
   await plants.expectListVisible();
   return plants;
 }
@@ -18,8 +18,6 @@ When('I go to the "Plants" page', async function (this: CustomWorld) {
 Then("I should see the plant list", async function (this: CustomWorld) {
   const plants = new PlantsPage(this.page!);
   await plants.expectListVisible();
-
-  // optional: also verify the page heading
   await expect(this.page!.locator('h3:has-text("Plants")')).toBeVisible();
 });
 
