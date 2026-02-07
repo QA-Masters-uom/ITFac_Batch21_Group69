@@ -2,3 +2,4 @@ automation/node_modules/
 automation/playwright-report/
 automation/test-results/
 /node_modules
+helpers
