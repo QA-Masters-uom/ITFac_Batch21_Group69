@@ -34,8 +34,6 @@ When('I go to the "Plants" management page', async function (this: CustomWorld) 
 When("I add a new plant with:", async function (this: CustomWorld, table: any) {
   const plants = await openPlants(this);
   const data = tableToPlant(table);
-
-  // Your PlantsPage.addPlant already clicks Add and fills the form :contentReference[oaicite:1]{index=1}
   await plants.addPlant(data);
 });
 

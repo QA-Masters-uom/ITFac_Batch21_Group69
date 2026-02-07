@@ -8,8 +8,10 @@ Feature: User Plant Permissions (UI)
 
   @Tester_204081G @UI
   Scenario: Verify User can search plants
-    Given I am logged in as "normal"
+    Given I am logged in as "admin"
     And a plant exists named "UserSearch"
+    And I log out
+    And I am logged in as "normal"
     When I go to the "Plants" page
     And I search plants for "UserSearch"
     Then only plants matching "UserSearch" should be shown

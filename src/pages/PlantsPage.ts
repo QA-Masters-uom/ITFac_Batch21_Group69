@@ -143,13 +143,50 @@ export class PlantsPage extends BasePage {
     await expect(this.page.locator('table, .plant-list')).toBeVisible();
   }
 
-  async expectOptionHiddenOrDisabled(label: 'Add a Plant' | 'Edit' | 'Delete') {
-    const button = this.page.getByRole('button', { name: new RegExp(label, 'i') });
+  // async expectOptionHiddenOrDisabled(label: 'Add a Plant' | 'Edit' | 'Delete') {
+  //   const button = this.page.getByRole('button', { name: new RegExp(label, 'i') });
 
-    // If it exists, must be disabled. If not, also acceptable.
-    const count = await button.count();
+  //   // If it exists, must be disabled. If not, also acceptable.
+  //   const count = await button.count();
+  //   if (count === 0) return;
+
+  //   await expect(button.first()).toBeDisabled();
+  // }
+  async expectOptionHiddenOrDisabled(label: "Add Plant" | "Edit" | "Delete") {
+    let locatorToCheck;
+
+    if (label === "Add Plant") {
+      // In your UI it's usually "Add a Plant" (link)
+      locatorToCheck = this.page.locator(
+        'a:has-text("Add a Plant"), a:has-text("Add Plant"), button:has-text("Add Plant")'
+      );
+    } else if (label === "Edit") {
+      locatorToCheck = this.page.locator(
+        'a[title="Edit"], button[title="Edit"], [aria-label="Edit"], [data-testid*="edit"]'
+      );
+    } else {
+      locatorToCheck = this.page.locator(
+        'a[title="Delete"], button[title="Delete"], [aria-label="Delete"], [data-testid*="delete"]'
+      );
+    }
+
+    const count = await locatorToCheck.count();
+
+    // If it's not on the page at all => hidden => PASS
     if (count === 0) return;
 
-    await expect(button.first()).toBeDisabled();
+    // If it exists, allow "disabled" (for buttons). For <a>, it won't be disabled normally.
+    const first = locatorToCheck.first();
+    const tagName = await first.evaluate((el) => el.tagName.toLowerCase());
+
+    if (tagName === "button") {
+      await expect(first).toBeDisabled();
+      return;
+    }
+
+    // If it's an <a> (link/icon), the correct behavior for normal user is usually hidden.
+    // So if it's visible, fail.
+    await expect(first).toBeHidden();
   }
+
 }
