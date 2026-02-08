@@ -1,6 +1,7 @@
-import { BasePage } from './BasePage';
-import { Page, Locator } from 'playwright';
-import { expect } from '@playwright/test';
+import { BasePage } from "./BasePage";
+import { Page, Locator } from "playwright";
+import { expect } from "@playwright/test";
+import { config } from "../support/config";
 
 export class CategoryEditPage extends BasePage {
   constructor(page: Page) {
@@ -8,13 +9,15 @@ export class CategoryEditPage extends BasePage {
   }
 
   private pageTitle = 'h3:has-text("Edit Category")';
-  private nameInput = '#name';
-  private parentIdSelect = '#parentId';
+  private nameInput = "#name";
+  private parentIdSelect = "#parentId";
   private saveButton = 'button:has-text("Save")';
   private cancelButton = 'a:has-text("Cancel")';
 
   async navigateToEditCategory(categoryId: number) {
-    await this.navigateTo(`http://localhost:8081/ui/categories/edit/${categoryId}`);
+    await this.navigateTo(
+      `${config.uiBaseUrl}/ui/categories/edit/${categoryId}`,
+    );
   }
 
   async isEditCategoryPageVisible(): Promise<boolean> {

@@ -1,6 +1,7 @@
 import { BasePage } from "./BasePage";
 import { Page } from "playwright";
 import { expect } from "@playwright/test";
+import { config } from "../support/config";
 
 export class SalesPage extends BasePage {
   constructor(page: Page) {
@@ -54,11 +55,11 @@ export class SalesPage extends BasePage {
   }
 
   async goToSalesPage() {
-    await this.navigateTo("http://localhost:8081/ui/sales");
+    await this.navigateTo(`${config.uiBaseUrl}/ui/sales`);
   }
 
   async goToSellPlantPage() {
-    await this.navigateTo("http://localhost:8081/ui/sales/new");
+    await this.navigateTo(`${config.uiBaseUrl}/ui/sales/new`);
   }
 
   async selectPlant(plantName: string) {

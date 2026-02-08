@@ -1,6 +1,7 @@
 import { BasePage } from "./BasePage";
 import { Page } from "playwright";
 import { expect } from "@playwright/test";
+import { config } from "../support/config";
 
 export class CategoriesPage extends BasePage {
   constructor(page: Page) {

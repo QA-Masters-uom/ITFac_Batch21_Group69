@@ -1,8 +1,7 @@
 import { Given, When, Then } from "@cucumber/cucumber";
 import { expect } from "@playwright/test";
 import { CustomWorld } from "../support/custom-world";
-
-const BASE_URL = process.env.API_BASE_URL ?? "http://localhost:8081";
+import { config } from "../support/config";
 
 // ============ TYPES ============
 
@@ -27,6 +26,8 @@ interface PageResponse {
   number: number;
   empty: boolean;
 }
+
+const BASE_URL = config.apiBaseUrl;
 
 function authHeaders(world: CustomWorld, tokenKey: string = "token") {
   const token = world.parameters[tokenKey];

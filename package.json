@@ -18,7 +18,11 @@
     "test:ui:205097T": "cucumber-js --tags \"@UI and @Tester_205097T\"",
     "test:api:205097T": "cucumber-js --tags \"@API and @Tester_205097T\"",
     "test:ui:204081G": "cucumber-js --tags \"@UI and @Tester_204081G\"",
-    "test:api:204081G": "cucumber-js --tags \"@API and @Tester_204081G\""
+    "test:api:204081G": "cucumber-js --tags \"@API and @Tester_204081G\"",
+    "test:api:204188P": "cucumber-js --tags \"@API and @Tester_204188P\"",
+    "test:ui:204188P": "cucumber-js --tags \"@UI and @Tester_204188P\"",
+    "test:ui:205072M": "cucumber-js --tags \"@UI and @Tester_205072M\"",
+    "test:api:205072M": "cucumber-js --tags \"@API and @Tester_205072M\""
   },
   "keywords": [],
   "author": "",

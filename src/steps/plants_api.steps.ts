@@ -1,6 +1,7 @@
 import { Given, When } from "@cucumber/cucumber";
 import { expect } from "@playwright/test";
 import { CustomWorld } from "../support/custom-world";
+import { config } from "../support/config";
 
 type PlantData = {
   name: string;
@@ -9,7 +10,7 @@ type PlantData = {
   quantity: string;
 };
 
-const BASE_URL = process.env.API_BASE_URL ?? "http://localhost:8081";
+const BASE_URL = config.apiBaseUrl;
 
 function tableToPlant(table: any): PlantData {
   const row = table.hashes()[0];

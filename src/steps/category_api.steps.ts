@@ -1,8 +1,9 @@
 import { Given, When, Then } from "@cucumber/cucumber";
 import { expect } from "@playwright/test";
 import { CustomWorld } from "../support/custom-world";
+import { config } from "../support/config";
 
-const BASE_URL = process.env.API_BASE_URL ?? "http://localhost:8081";
+const BASE_URL = config.apiBaseUrl;
 
 // ============ TYPES ============
 

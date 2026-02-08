@@ -15,8 +15,6 @@ export interface ICustomWorld extends World {
   isUITest?: boolean;
 }
 
-setDefaultTimeout(1200000);
-
 export class CustomWorld extends World implements ICustomWorld {
   browser?: Browser;
   context?: BrowserContext;

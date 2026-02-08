@@ -1,12 +1,13 @@
-import { Before, After, setDefaultTimeout } from '@cucumber/cucumber';
-import { CustomWorld } from './custom-world';
+import { Before, After, setDefaultTimeout } from "@cucumber/cucumber";
+import { CustomWorld } from "./custom-world";
+import { config } from "./config";
 
-setDefaultTimeout(60000);
+setDefaultTimeout(config.defaultTimeOut);
 
 Before(async function (this: CustomWorld) {
-    await this.init();
+  await this.init();
 });
 
 After(async function (this: CustomWorld) {
-    await this.close();
+  await this.close();
 });

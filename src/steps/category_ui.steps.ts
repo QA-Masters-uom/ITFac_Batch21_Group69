@@ -6,9 +6,10 @@ import { DashboardPage } from "../pages/DashboardPage";
 import { CategoriesPage } from "../pages/CategoriesPage";
 import { CategoryAddPage } from "../pages/CategoryAddPage";
 import { CategoryEditPage } from "../pages/CategoryEditPage";
+import { config } from "../support/config";
 
-const BASE_URL = process.env.UI_BASE_URL ?? "http://localhost:8081";
-const API_BASE_URL = process.env.API_BASE_URL ?? "http://localhost:8081";
+const BASE_URL = config.uiBaseUrl;
+const API_BASE_URL = config.apiBaseUrl;
 
 // ============ API HELPER FUNCTIONS ============
 

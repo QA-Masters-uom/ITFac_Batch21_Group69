@@ -2,6 +2,7 @@ import { Given, Then } from "@cucumber/cucumber";
 import { CustomWorld } from "../support/custom-world";
 import { LoginPage } from "../pages/LoginPage";
 import { expect } from "@playwright/test";
+import { config } from "../support/config";
 
 Given(
   "I am logged in as {string}",
@@ -33,7 +34,7 @@ Given(
     const password = role === "admin" ? "admin123" : "test123";
 
     const response = await this.page!.request.post(
-      "http://localhost:8081/api/auth/login",
+      `${config.apiBaseUrl}${config.apiAuthLogin}`,
       {
         data: { username, password },
       },
@@ -57,7 +58,7 @@ Given("I log out", async function (this: CustomWorld) {
   });
 
   // Go to login page and ensure we're logged out
-  await this.page!.goto("http://localhost:8081/ui/login");
+  await this.page!.goto(`${config.uiBaseUrl}${config.uiLogin}`);
 });
 
 Then(
